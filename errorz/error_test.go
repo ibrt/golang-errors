@@ -92,12 +92,16 @@ func TestAssert(t *testing.T) {
 }
 
 type testCloser struct {
+	fail   bool
 	closed bool
 }
 
 // Close implements io.Closer.
 func (c *testCloser) Close() error {
 	c.closed = true
+	if c.fail {
+		return errorz.Errorf("close error")
+	}
 	return nil
 }
 
@@ -105,6 +109,27 @@ func TestIgnoreClose(t *testing.T) {
 	tc := &testCloser{}
 	require.False(t, tc.closed)
 	errorz.IgnoreClose(tc)
+	require.True(t, tc.closed)
+
+	tc = &testCloser{fail: true}
+	require.False(t, tc.closed)
+	errorz.IgnoreClose(tc)
+	require.True(t, tc.closed)
+}
+
+func TestMustClose(t *testing.T) {
+	tc := &testCloser{}
+	require.False(t, tc.closed)
+	require.NotPanics(t, func() {
+		errorz.MustClose(tc)
+	})
+	require.True(t, tc.closed)
+
+	tc = &testCloser{fail: true}
+	require.False(t, tc.closed)
+	require.PanicsWithError(t, "close error", func() {
+		errorz.MustClose(tc)
+	})
 	require.True(t, tc.closed)
 }
 

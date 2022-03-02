@@ -138,6 +138,13 @@ func IgnoreClose(c io.Closer) {
 	}
 }
 
+// MustClose calls Close on the given io.Closer, panicking in case of error. Handy for the defer Close pattern.
+func MustClose(c io.Closer) {
+	if c != nil {
+		MaybeMustWrap(c.Close(), Skip())
+	}
+}
+
 // Unwrap undoes Wrap, returning the original error.
 func Unwrap(err error) error {
 	if wErr, ok := err.(*wrappedError); ok {
