@@ -8,6 +8,10 @@ import (
 
 // GetCallers returns the raw stack trace from the error, or the current raw stack trace if not found.
 func GetCallers(err error) []uintptr {
+	return getCallersInternal(err, 1)
+}
+
+func getCallersInternal(err error, skip int) []uintptr {
 	if e, ok := err.(*wrappedError); ok {
 		if e.callers != nil {
 			return e.callers
@@ -15,7 +19,7 @@ func GetCallers(err error) []uintptr {
 	}
 
 	callers := make([]uintptr, 1024)
-	return callers[:runtime.Callers(2, callers[:])]
+	return callers[:runtime.Callers(2+skip, callers[:])]
 }
 
 // Skip skips the caller from the stack trace.
