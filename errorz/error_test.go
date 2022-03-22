@@ -221,6 +221,11 @@ func TestSkipAll(t *testing.T) {
 	require.True(t, strings.HasPrefix(errorz.FormatStackTrace(errorz.GetCallers(err))[0], "errorz_test.TestSkipAll"))
 }
 
+func TestSkipPackage(t *testing.T) {
+	err := skipPkgNoSkipErr()
+	require.False(t, strings.HasPrefix(errorz.FormatStackTrace(errorz.GetCallers(err))[0], "errorz_test"))
+}
+
 //go:noinline
 func skipErr() error {
 	return errorz.Errorf("test error", errorz.Skip())
@@ -239,4 +244,9 @@ func skipNoSkipErr() error {
 //go:noinline
 func skipAllNoSkipErr() error {
 	return errorz.Wrap(noSkipErr(), errorz.SkipAll())
+}
+
+//go:noinline
+func skipPkgNoSkipErr() error {
+	return errorz.Wrap(noSkipErr(), errorz.SkipPackage())
 }

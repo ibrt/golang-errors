@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 // GetCallers returns the raw stack trace from the error, or the current raw stack trace if not found.
@@ -58,6 +59,39 @@ func SkipAll() OptionFunc {
 			}
 		}
 	}
+}
+
+// SkipPackage skips all frames from the caller package from the stack trace.
+func SkipPackage() OptionFunc {
+	var callerFunc *runtime.Func
+	if caller, _, _, ok := runtime.Caller(1); ok {
+		callerFunc = runtime.FuncForPC(caller)
+	}
+
+	callerPkg := getPackageFromFunc(callerFunc)
+
+	return func(err error) {
+		if e, ok := err.(*wrappedError); callerPkg != "" && ok && e.callers != nil {
+			otherCallers := make([]uintptr, 0, len(e.callers))
+			for _, caller := range e.callers {
+				if callerPkg != getPackageFromFunc(runtime.FuncForPC(caller)) {
+					otherCallers = append(otherCallers, caller)
+				}
+			}
+			e.callers = otherCallers
+		}
+	}
+}
+
+func getPackageFromFunc(f *runtime.Func) string {
+	if f != nil {
+		n := f.Name()
+		if dotIndex := strings.LastIndex(n, "."); dotIndex >= 0 {
+			return n[:dotIndex]
+		}
+	}
+
+	return ""
 }
 
 // FormatStackTrace formats the given raw stack trace.
