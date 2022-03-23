@@ -84,14 +84,31 @@ func SkipPackage() OptionFunc {
 }
 
 func getPackageFromFunc(f *runtime.Func) string {
+	pkg := ""
 	if f != nil {
-		n := f.Name()
-		if dotIndex := strings.Index(n, "."); dotIndex >= 0 {
-			return n[:dotIndex]
-		}
+		pkg = getPackageFromFuncName(f.Name())
+	}
+	return pkg
+}
+
+func getPackageFromFuncName(name string) string {
+	dir := ""
+	base := name
+
+	if lastSlashIndex := strings.LastIndex(base, "/"); lastSlashIndex >= 0 {
+		dir = name[:lastSlashIndex]
+		base = name[lastSlashIndex+1:]
 	}
 
-	return ""
+	if dotIndex := strings.Index(base, "."); dotIndex >= 0 {
+		base = base[:dotIndex]
+	}
+
+	if dir != "" {
+		return dir + "/" + base
+	}
+
+	return base
 }
 
 // FormatStackTrace formats the given raw stack trace.
