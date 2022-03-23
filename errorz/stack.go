@@ -86,8 +86,8 @@ func SkipPackage() OptionFunc {
 func getPackageFromFunc(f *runtime.Func) string {
 	if f != nil {
 		n := f.Name()
-		if dotIndex := strings.LastIndex(n, "."); dotIndex >= 0 {
-			return n[:dotIndex]
+		if dotIndex := strings.Index(n, "."); dotIndex >= 0 {
+			return n[:dotIndex+1]
 		}
 	}
 
